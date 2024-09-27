@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   Button,
@@ -12,6 +12,8 @@ import {
 
 import { Amplify } from "aws-amplify";
 import { DataStore } from "aws-amplify/datastore";
+
+import { Subscription } from "rxjs";
 
 import amplifyconfig from "../amplifyconfiguration.json";
 
@@ -86,6 +88,16 @@ const Item = ({ data, onDelete }: ItemProps) => {
 };
 
 function useAmplifyData() {
+  const subscription = useRef<Subscription | null>(null);
+
+  const setSubscription = (newsubscription: Subscription | null) => {
+    subscription.current = newsubscription;
+  };
+
+  const getSubscription = () => {
+    return subscription.current;
+  };
+
   const [data, setData] = useState<LazyTodo[]>([]);
 
   const sorter = (a: LazyTodo, b: LazyTodo) => {
@@ -105,19 +117,31 @@ function useAmplifyData() {
       })
     ).then((newdata: LazyTodo) => {
       console.log("Inserted", newdata);
-      query();
     });
   }, []);
 
   const remove = useCallback((data: LazyTodo) => {
     DataStore.delete(data).then((removed: LazyTodo) => {
       console.log("Removed", removed);
-      query();
     });
   }, []);
 
+  const observe = useCallback(() => {
+    console.log("Set Subscription");
+    getSubscription()?.unsubscribe();
+    const subscription = DataStore.observe(Todo).subscribe((msg) => {
+      console.log(msg.model, msg.opType, msg.element);
+      query();
+    });
+    setSubscription(subscription);
+  }, []);
+
   useEffect(() => {
-    query();
+    observe();
+
+    return () => {
+      getSubscription()?.unsubscribe();
+    };
   }, []);
 
   return [data, query, add, remove] as [
