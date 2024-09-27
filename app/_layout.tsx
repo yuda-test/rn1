@@ -137,6 +137,7 @@ function useAmplifyData() {
   }, []);
 
   useEffect(() => {
+    query();
     observe();
 
     return () => {
