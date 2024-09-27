@@ -152,8 +152,8 @@ function useAmplifyData() {
   }, []);
 
   const observe = useCallback(() => {
+    unobserve();
     console.log("Set Subscription");
-    getSubscription()?.unsubscribe();
     const subscription = DataStore.observe(Todo).subscribe((msg) => {
       console.log(msg.model, msg.opType, msg.element);
       query();
@@ -161,20 +161,28 @@ function useAmplifyData() {
     setSubscription(subscription);
   }, []);
 
+  const unobserve = useCallback(() => {
+    console.log("Remove Subscription");
+    getSubscription()?.unsubscribe();
+    setSubscription(null);
+  }, []);
+
   useEffect(() => {
     query();
     observe();
 
     return () => {
-      getSubscription()?.unsubscribe();
+      unobserve();
     };
   }, []);
 
-  return [data, query, add, remove] as [
+  return [data, query, add, remove, observe, unobserve] as [
     LazyTodo[],
     () => void,
     (text: string) => void,
-    (data: LazyTodo) => void
+    (data: LazyTodo) => void,
+    () => void,
+    () => void
   ];
 }
 
