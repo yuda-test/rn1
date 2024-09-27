@@ -25,6 +25,9 @@ export default function RootLayout() {
   const [input, setInput] = useState<string>("");
 
   const commit = () => {
+    if (!input) {
+      return;
+    }
     add(input);
     setInput("");
   };
@@ -76,12 +79,7 @@ const Item = ({ data, onDelete }: ItemProps) => {
       <Text style={styles.list_item_id}>{data.id}</Text>
       <Text style={styles.list_item_title}>{data.text}</Text>
       <View style={styles.list_item_delete}>
-        <Button
-          onPress={remove}
-          title="DELETE"
-          color="#E01212"
-          accessibilityLabel="Learn more about this purple button"
-        />
+        <Button onPress={remove} title="DELETE" color="#E01212" />
       </View>
     </View>
   );
