@@ -58,12 +58,18 @@ export default function RootLayout() {
           data={data}
           renderItem={({ item }) => <Item data={item} onDelete={remove} />}
           keyExtractor={(item) => item.id}
+          ListEmptyComponent={<EmptyComponent />}
         />
       </View>
 
       <View style={styles.legend_box}>
         <Text style={styles.legend_header}>List To Do 2</Text>
-        <Text>Some Text or control</Text>
+        <FlatList<LazyTodo>
+          data={[]}
+          renderItem={({ item }) => <Item data={item} onDelete={remove} />}
+          keyExtractor={(item) => item.id}
+          ListEmptyComponent={<EmptyComponent />}
+        />
       </View>
     </SafeAreaView>
   );
@@ -71,7 +77,7 @@ export default function RootLayout() {
 
 type ItemProps = { data: LazyTodo; onDelete?: (record: LazyTodo) => void };
 
-const Item = ({ data, onDelete }: ItemProps) => {
+function Item({ data, onDelete }: ItemProps) {
   const windowWidth = useWindowDimensions().width;
   const windowHeight = useWindowDimensions().height;
 
@@ -110,7 +116,15 @@ const Item = ({ data, onDelete }: ItemProps) => {
       </View>
     </View>
   );
-};
+}
+
+function EmptyComponent() {
+  return (
+    <View>
+      <Text>There is nothing here but ghost</Text>
+    </View>
+  );
+}
 
 function useAmplifyData() {
   const subscription = useRef<Subscription | null>(null);
