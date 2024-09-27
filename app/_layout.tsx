@@ -29,9 +29,7 @@ export default function RootLayout() {
     setInput("");
   };
 
-  useEffect(() => {
-    console.log(data[0]);
-  }, [data]);
+  useEffect(() => {}, [data]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -103,13 +101,15 @@ function useAmplifyData() {
       new Todo({
         text: text,
       })
-    ).then(() => {
+    ).then((newdata: LazyTodo) => {
+      console.log("Inserted", newdata);
       query();
     });
   }, []);
 
   const remove = useCallback((data: LazyTodo) => {
-    DataStore.delete(data).then(() => {
+    DataStore.delete(data).then((removed: LazyTodo) => {
+      console.log("Removed", removed);
       query();
     });
   }, []);
