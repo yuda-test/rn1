@@ -20,7 +20,7 @@ import { LazyTodo, Todo } from "../models";
 Amplify.configure(amplifyconfig);
 
 export default function RootLayout() {
-  const [data, add, remove] = useAmplifyData();
+  const [data, query, add, remove] = useAmplifyData();
 
   const [input, setInput] = useState<string>("");
 
@@ -38,12 +38,10 @@ export default function RootLayout() {
           <TextInput onChangeText={setInput} value={input} />
         </View>
         <View style={styles.add_button}>
-          <Button
-            onPress={commit}
-            title="Add"
-            color="#841584"
-            accessibilityLabel="Learn more about this purple button"
-          />
+          <Button onPress={commit} title="Add" color="#841584" />
+        </View>
+        <View style={styles.refresh_button}>
+          <Button onPress={query} title="Refresh" color="#23A760" />
         </View>
       </View>
 
@@ -92,8 +90,14 @@ const Item = ({ data, onDelete }: ItemProps) => {
 function useAmplifyData() {
   const [data, setData] = useState<LazyTodo[]>([]);
 
+  const sorter = (a: LazyTodo, b: LazyTodo) => {
+    const _a = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+    const _b = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+    return _b - _a;
+  };
+
   const query = useCallback(() => {
-    DataStore.query(Todo).then((models) => setData(models));
+    DataStore.query(Todo).then((models) => setData(models.sort(sorter)));
   }, [data, setData]);
 
   const add = useCallback((text: string): void => {
@@ -118,8 +122,9 @@ function useAmplifyData() {
     query();
   }, []);
 
-  return [data, add, remove] as [
+  return [data, query, add, remove] as [
     LazyTodo[],
+    () => void,
     (text: string) => void,
     (data: LazyTodo) => void
   ];
@@ -146,6 +151,11 @@ const styles = StyleSheet.create({
   add_button: {
     width: 100,
     borderRadius: 8,
+  },
+  refresh_button: {
+    width: 100,
+    borderRadius: 8,
+    marginLeft: 8,
   },
   legend_box: {
     margin: 10,
