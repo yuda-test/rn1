@@ -8,6 +8,8 @@ import {
   View,
   StyleSheet,
   FlatList,
+  useWindowDimensions,
+  ViewStyle,
 } from "react-native";
 
 import { Amplify } from "aws-amplify";
@@ -70,6 +72,23 @@ export default function RootLayout() {
 type ItemProps = { data: LazyTodo; onDelete?: (record: LazyTodo) => void };
 
 const Item = ({ data, onDelete }: ItemProps) => {
+  const windowWidth = useWindowDimensions().width;
+  const windowHeight = useWindowDimensions().height;
+
+  const generateContainerStyle = () => {
+    return {
+      flexDirection: windowWidth < windowHeight ? "column" : "row",
+      alignItems: windowWidth < windowHeight ? "center" : "center",
+      justifyContent: windowWidth < windowHeight ? "center" : "center",
+    } as ViewStyle;
+  };
+
+  const generateItemStyle = () => {
+    return {
+      alignSelf: windowWidth < windowHeight ? "flex-start" : "center",
+    } as ViewStyle;
+  };
+
   const remove = () => {
     if (onDelete) {
       onDelete(data);
@@ -77,9 +96,15 @@ const Item = ({ data, onDelete }: ItemProps) => {
   };
 
   return (
-    <View style={styles.list_item_container}>
-      <Text style={styles.list_item_id}>{data.id}</Text>
-      <Text style={styles.list_item_title}>{data.text}</Text>
+    <View style={[styles.list_item_container]}>
+      <View style={[styles.list_item_info_container, generateContainerStyle()]}>
+        <Text style={[styles.list_item_id, generateItemStyle()]}>
+          {data.id}
+        </Text>
+        <Text style={[styles.list_item_title, generateItemStyle()]}>
+          {data.text}
+        </Text>
+      </View>
       <View style={styles.list_item_delete}>
         <Button onPress={remove} title="DELETE" color="#E01212" />
       </View>
@@ -199,19 +224,29 @@ const styles = StyleSheet.create({
     backgroundColor: "azure",
   },
   list_item_container: {
-    alignItems: "center",
+    flex: 1,
     flexDirection: "row",
+    marginVertical: 2,
+    padding: 4,
     borderWidth: 1,
     borderColor: "black",
     borderStyle: "solid",
-    marginVertical: 2,
-    padding: 4,
   },
-  list_item_title: {
-    width: "45%",
+  list_item_info_container: {
+    flexDirection: "row",
+    flexGrow: 1,
   },
   list_item_id: {
-    width: "45%",
+    flexGrow: 1,
+    maxWidth: 300,
+    alignSelf: "flex-start",
   },
-  list_item_delete: {},
+  list_item_title: {
+    flexGrow: 1,
+    alignSelf: "flex-start",
+  },
+  list_item_delete: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });
