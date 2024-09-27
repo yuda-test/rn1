@@ -1,26 +1,184 @@
+import { useCallback, useEffect, useState } from "react";
 
-import { Text } from 'react-native';
-import { DataStore } from 'aws-amplify/datastore';
-import { Todo } from '../models';
+import {
+  Button,
+  SafeAreaView,
+  Text,
+  TextInput,
+  View,
+  StyleSheet,
+  FlatList,
+} from "react-native";
 
 import { Amplify } from "aws-amplify";
+import { DataStore } from "aws-amplify/datastore";
+
 import amplifyconfig from "../amplifyconfiguration.json";
-import { useEffect } from 'react';
+
+import { LazyTodo, Todo } from "../models";
 
 Amplify.configure(amplifyconfig);
 
 export default function RootLayout() {
+  const [data, add, remove] = useAmplifyData();
+
+  const [input, setInput] = useState<string>("");
+
+  const commit = () => {
+    add(input);
+    setInput("");
+  };
 
   useEffect(() => {
-    // DataStore.save(
-    //   new Todo({
-    //     "text": "Lorem ipsum dolor sit amet"
-    //   })
-    // );
+    console.log(data[0]);
+  }, [data]);
 
-    DataStore.query(Todo)
-      .then(models => console.log(models));
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.add_container}>
+        <View style={styles.add_textinput}>
+          <TextInput onChangeText={setInput} value={input} />
+        </View>
+        <View style={styles.add_button}>
+          <Button
+            onPress={commit}
+            title="Add"
+            color="#841584"
+            accessibilityLabel="Learn more about this purple button"
+          />
+        </View>
+      </View>
+
+      <View style={styles.legend_box}>
+        <Text style={styles.legend_header}>List To Do 1</Text>
+        <FlatList<LazyTodo>
+          data={data}
+          renderItem={({ item }) => <Item data={item} onDelete={remove} />}
+          keyExtractor={(item) => item.id}
+        />
+      </View>
+
+      <View style={styles.legend_box}>
+        <Text style={styles.legend_header}>List To Do 2</Text>
+        <Text>Some Text or control</Text>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+type ItemProps = { data: LazyTodo; onDelete?: (record: LazyTodo) => void };
+
+const Item = ({ data, onDelete }: ItemProps) => {
+  const remove = () => {
+    if (onDelete) {
+      onDelete(data);
+    }
+  };
+
+  return (
+    <View style={styles.list_item_container}>
+      <Text style={styles.list_item_id}>{data.id}</Text>
+      <Text style={styles.list_item_title}>{data.text}</Text>
+      <View style={styles.list_item_delete}>
+        <Button
+          onPress={remove}
+          title="DELETE"
+          color="#E01212"
+          accessibilityLabel="Learn more about this purple button"
+        />
+      </View>
+    </View>
+  );
+};
+
+function useAmplifyData() {
+  const [data, setData] = useState<LazyTodo[]>([]);
+
+  const query = useCallback(() => {
+    DataStore.query(Todo).then((models) => setData(models));
+  }, [data, setData]);
+
+  const add = useCallback((text: string): void => {
+    DataStore.save(
+      new Todo({
+        text: text,
+      })
+    ).then(() => {
+      query();
+    });
   }, []);
 
-  return <Text>test</Text>;
+  const remove = useCallback((data: LazyTodo) => {
+    DataStore.delete(data).then(() => {
+      query();
+    });
+  }, []);
+
+  useEffect(() => {
+    query();
+  }, []);
+
+  return [data, add, remove] as [
+    LazyTodo[],
+    (text: string) => void,
+    (data: LazyTodo) => void
+  ];
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "azure",
+    padding: 8,
+  },
+  add_container: {
+    padding: 8,
+    flexDirection: "row",
+  },
+  add_textinput: {
+    borderWidth: 1,
+    borderColor: "black",
+    borderStyle: "solid",
+    padding: 4,
+    flexGrow: 1,
+    marginRight: 8,
+  },
+  add_button: {
+    width: 100,
+    borderRadius: 8,
+  },
+  legend_box: {
+    margin: 10,
+    paddingHorizontal: 10,
+    paddingBottom: 10,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "#000",
+    paddingTop: 16,
+    maxHeight: 300,
+  },
+  legend_header: {
+    position: "absolute",
+    top: -10,
+    left: 10,
+    fontWeight: "bold",
+    paddingHorizontal: 4,
+    backgroundColor: "azure",
+  },
+  list_item_container: {
+    alignItems: "center",
+    flexDirection: "row",
+    borderWidth: 1,
+    borderColor: "black",
+    borderStyle: "solid",
+    marginVertical: 2,
+    padding: 4,
+  },
+  list_item_title: {
+    width: 300,
+  },
+  list_item_id: {
+    width: 300,
+  },
+  list_item_delete: {},
+});
