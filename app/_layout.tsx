@@ -207,10 +207,10 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   list_item_title: {
-    width: 300,
+    width: "45%",
   },
   list_item_id: {
-    width: 300,
+    width: "45%",
   },
   list_item_delete: {},
 });
